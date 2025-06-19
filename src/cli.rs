@@ -28,7 +28,10 @@ pub fn super_handler(mut lists: Lists) -> Result<()> {
             continue;
         }
 
-        let input_strings = input.split_once(' ').map(|input| (input.0, input.1.trim())).unwrap_or((input.trim(), ""));
+        let input_strings = input
+            .split_once(' ')
+            .map(|input| (input.0, input.1.trim()))
+            .unwrap_or((input.trim(), ""));
 
         match input_strings.0 {
             "exit" => {
@@ -61,8 +64,11 @@ fn sub_handler(list: &mut List) {
             continue;
         }
 
-        let input_strings = input.split_once(' ').map(|input| (input.0, input.1.trim())).unwrap_or((input.trim(), ""));
-        
+        let input_strings = input
+            .split_once(' ')
+            .map(|input| (input.0, input.1.trim()))
+            .unwrap_or((input.trim(), ""));
+
         match input_strings.0 {
             "exit" => break,
             "rm" => println!("{}", rm(list, input_strings.1)),
