@@ -13,7 +13,6 @@ pub trait Menu: Display {
     fn mk(&mut self, name: String) -> Result<()>;
     fn rm(&mut self, name: &str) -> Result<()>;
     fn name(&mut self, name: &str, new_name: String) -> Result<()>;
-    fn desc(&mut self, name: &str) -> Result<()>;
 }
 
 #[derive(Serialize, Deserialize)]
@@ -73,7 +72,7 @@ impl Display for List {
 impl Display for ListItem {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let desc_text = match &self.desc {
-            Some(_) => "(...)",
+            Some(_) => " (...)",
             None => "",
         };
 
@@ -114,10 +113,6 @@ impl Menu for Lists {
         self.lists[index].name = new_name;
 
         Ok(())
-    }
-
-    fn desc(&mut self, _name: &str) -> Result<()> {
-        Err(anyhow!("Invalid command"))
     }
 }
 
@@ -201,10 +196,6 @@ impl Menu for List {
 
         Ok(())
     }
-
-    fn desc(&mut self, name: &str) -> Result<()> {
-        todo!()
-    }
 }
 
 impl List {
@@ -226,6 +217,18 @@ impl List {
             Some(desc) => &desc[..],
             None => "No description",
         })
+    }
+
+    pub fn desc(&mut self, name: &str, desc: &str) -> Result<()> {
+        let index = self
+            .items
+            .iter()
+            .position(|item| item.name == name)
+            .ok_or(anyhow!("List not found"))?;
+
+        self.items[index].desc = Some(desc.to_string());
+
+        Ok(())
     }
 
     fn count(&self) -> usize {

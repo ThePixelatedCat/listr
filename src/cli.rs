@@ -74,6 +74,7 @@ fn sub_handler(list: &mut List) {
                 "mk" => println!("{}", mk(list, input_strings)),
                 "name" => println!("{}", name(list, input_strings)),
                 "open" => println!("{}", open_desc(list, input_strings)),
+                "desc" => println!("{}", desc(list, input_strings)),
                 "help" => println!("{}", SUB_HELP),
                 _ => println!("Invalid command"),
             }
@@ -152,5 +153,23 @@ fn open_desc(list: &mut List, mut args: SplitWhitespace<'_>) -> String {
     match list.get_desc(name) {
         Ok(desc) => format!("\n{}\n{desc}", name.to_uppercase()),
         Err(err) => err.to_string(),
+    }
+}
+
+fn desc(list: &mut List, mut args: SplitWhitespace<'_>) -> String {
+    let name = match args.next() {
+        Some(arg) => arg,
+        None => return "Missing NAME arg".to_string(),
+    };
+
+    let new_desc = match args.next() {
+        Some(arg) => arg,
+        None => return "Missing NEW_DESC arg".to_string(),
+    };
+
+    if let Err(err) = list.desc(name, new_desc) {
+        err.to_string()
+    } else {
+        format!("Changed {name}'s desc")
     }
 }
