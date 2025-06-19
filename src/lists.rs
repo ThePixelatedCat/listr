@@ -156,9 +156,8 @@ impl Lists {
     }
 
     fn get_saves_location() -> Result<PathBuf> {
-        Ok(env::current_exe()
+        Ok(env::current_dir()
             .context("Insufficient permissions to access working directory")?
-            .parent().unwrap()
             .join(FILE_NAME))
     }
 }
