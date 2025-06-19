@@ -1,4 +1,4 @@
-use std::{io, str::SplitWhitespace};
+use std::io;
 
 use crate::lists::{List, Lists, Menu};
 use anyhow::{Context, Result, anyhow};
@@ -28,26 +28,22 @@ pub fn super_handler(mut lists: Lists) -> Result<()> {
             continue;
         }
 
-        let mut input_strings = input.split_whitespace();
+        let input_strings = input.split_once(' ').map(|input| (input.0, input.1.trim())).unwrap_or((input.trim(), ""));
 
-        if let Some(command) = input_strings.next() {
-            match command {
-                "exit" => {
-                    lists.save_lists().context("Failed to save lists")?;
-                    break;
-                }
-                "rm" => println!("{}", rm(&mut lists, input_strings)),
-                "mk" => println!("{}", mk(&mut lists, input_strings)),
-                "name" => println!("{}", name(&mut lists, input_strings)),
-                "open" => match open(&mut lists, input_strings) {
-                    Ok(list) => sub_handler(list),
-                    Err(err) => println!("{}", err),
-                },
-                "help" => println!("{}", SUPER_HELP),
-                _ => println!("Invalid command"),
+        match input_strings.0 {
+            "exit" => {
+                lists.save_lists().context("Failed to save lists")?;
+                break;
             }
-        } else {
-            println!("Please provide command")
+            "rm" => println!("{}", rm(&mut lists, input_strings.1)),
+            "mk" => println!("{}", mk(&mut lists, input_strings.1)),
+            "name" => println!("{}", name(&mut lists, input_strings.1)),
+            "open" => match open(&mut lists, input_strings.1) {
+                Ok(list) => sub_handler(list),
+                Err(err) => println!("{}", err),
+            },
+            "help" => println!("{}", SUPER_HELP),
+            _ => println!("Invalid command"),
         }
     }
 
@@ -65,44 +61,38 @@ fn sub_handler(list: &mut List) {
             continue;
         }
 
-        let mut input_strings = input.split_whitespace();
-
-        if let Some(command) = input_strings.next() {
-            match command {
-                "exit" => break,
-                "rm" => println!("{}", rm(list, input_strings)),
-                "mk" => println!("{}", mk(list, input_strings)),
-                "name" => println!("{}", name(list, input_strings)),
-                "open" => println!("{}", open_desc(list, input_strings)),
-                "desc" => println!("{}", desc(list, input_strings)),
-                "help" => println!("{}", SUB_HELP),
-                _ => println!("Invalid command"),
-            }
-        } else {
-            println!("Please provide command")
+        let input_strings = input.split_once(' ').map(|input| (input.0, input.1.trim())).unwrap_or((input.trim(), ""));
+        
+        match input_strings.0 {
+            "exit" => break,
+            "rm" => println!("{}", rm(list, input_strings.1)),
+            "mk" => println!("{}", mk(list, input_strings.1)),
+            "name" => println!("{}", name(list, input_strings.1)),
+            "open" => println!("{}", open_desc(list, input_strings.1)),
+            "desc" => println!("{}", desc(list, input_strings.1)),
+            "help" => println!("{}", SUB_HELP),
+            _ => println!("Invalid command"),
         }
     }
 }
 
-fn mk(menu: &mut dyn Menu, mut args: SplitWhitespace<'_>) -> String {
-    let name = match args.next() {
-        Some(arg) => arg,
-        None => return "Missing NAME arg".to_string(),
-    };
+fn mk(menu: &mut dyn Menu, name: &str) -> String {
+    if name.is_empty() {
+        return "Missing NAME arg".to_string();
+    }
 
-    if let Err(err) = menu.mk(name.to_string()) {
+    if let Err(err) = menu.mk(name) {
         err.to_string()
     } else {
         format!("Added {name}")
     }
 }
 
-fn rm(menu: &mut dyn Menu, mut args: SplitWhitespace<'_>) -> String {
+fn rm(menu: &mut dyn Menu, name: &str) -> String {
     let mut input = String::new();
-    let name = match args.next() {
-        Some(arg) => arg,
-        None => return "Missing NAME arg".to_string(),
-    };
+    if name.is_empty() {
+        return "Missing NAME arg".to_string();
+    }
 
     println!("Are you sure you want to delete {name}? [Y/n]");
     if let Err(err) = io::stdin().read_line(&mut input) {
@@ -120,35 +110,37 @@ fn rm(menu: &mut dyn Menu, mut args: SplitWhitespace<'_>) -> String {
     }
 }
 
-fn name(menu: &mut dyn Menu, mut args: SplitWhitespace<'_>) -> String {
-    let name = match args.next() {
-        Some(arg) => arg,
-        None => return "Missing NAME arg".to_string(),
-    };
+fn name(menu: &mut dyn Menu, name: &str) -> String {
+    let mut input = String::new();
+    if name.is_empty() {
+        return "Missing NAME arg".to_string();
+    }
 
-    let new_name = match args.next() {
-        Some(arg) => arg,
-        None => return "Missing NEW_NAME arg".to_string(),
-    };
+    println!("Enter new name");
+    if let Err(err) = io::stdin().read_line(&mut input) {
+        return format!("Error reading new name: {err}");
+    }
+    let trimmed_input = input.trim();
 
-    if let Err(err) = menu.name(name, new_name.to_string()) {
+    if let Err(err) = menu.name(name, trimmed_input) {
         err.to_string()
     } else {
-        format!("Renamed {name} to {new_name}")
+        format!("Renamed {name} to {trimmed_input}")
     }
 }
 
-fn open<'a>(lists: &'a mut Lists, mut args: SplitWhitespace<'_>) -> Result<&'a mut List> {
-    let name = args.next().ok_or(anyhow!("Missing NAME arg"))?;
+fn open<'a>(lists: &'a mut Lists, name: &str) -> Result<&'a mut List> {
+    if name.is_empty() {
+        return Err(anyhow!("Missing NAME arg"));
+    }
 
     lists.get_list(name)
 }
 
-fn open_desc(list: &mut List, mut args: SplitWhitespace<'_>) -> String {
-    let name = match args.next() {
-        Some(arg) => arg,
-        None => return "Missing NAME arg".to_string(),
-    };
+fn open_desc(list: &mut List, name: &str) -> String {
+    if name.is_empty() {
+        return "Missing NAME arg".to_string();
+    }
 
     match list.get_desc(name) {
         Ok(desc) => format!("\n{}\n{desc}", name.to_uppercase()),
@@ -156,18 +148,18 @@ fn open_desc(list: &mut List, mut args: SplitWhitespace<'_>) -> String {
     }
 }
 
-fn desc(list: &mut List, mut args: SplitWhitespace<'_>) -> String {
-    let name = match args.next() {
-        Some(arg) => arg,
-        None => return "Missing NAME arg".to_string(),
-    };
+fn desc(list: &mut List, name: &str) -> String {
+    let mut input = String::new();
+    if name.is_empty() {
+        return "Missing NAME arg".to_string();
+    }
 
-    let new_desc = match args.next() {
-        Some(arg) => arg,
-        None => return "Missing NEW_DESC arg".to_string(),
-    };
+    println!("Enter description");
+    if let Err(err) = io::stdin().read_line(&mut input) {
+        return format!("Error reading description: {err}");
+    }
 
-    if let Err(err) = list.desc(name, new_desc) {
+    if let Err(err) = list.desc(name, input.trim()) {
         err.to_string()
     } else {
         format!("Changed {name}'s desc")

@@ -10,9 +10,9 @@ use std::{
 const FILE_NAME: &str = "lists.json";
 
 pub trait Menu: Display {
-    fn mk(&mut self, name: String) -> Result<()>;
+    fn mk(&mut self, name: &str) -> Result<()>;
     fn rm(&mut self, name: &str) -> Result<()>;
-    fn name(&mut self, name: &str, new_name: String) -> Result<()>;
+    fn name(&mut self, name: &str, new_name: &str) -> Result<()>;
 }
 
 #[derive(Serialize, Deserialize)]
@@ -82,11 +82,11 @@ impl Display for ListItem {
 }
 
 impl Menu for Lists {
-    fn mk(&mut self, name: String) -> Result<()> {
+    fn mk(&mut self, name: &str) -> Result<()> {
         if self.lists.iter().any(|list| list.name == name) {
             Err(anyhow!("Duplicate name"))
         } else {
-            self.lists.push(List::new(name));
+            self.lists.push(List::new(name.to_string()));
             Ok(())
         }
     }
@@ -103,14 +103,14 @@ impl Menu for Lists {
         Ok(())
     }
 
-    fn name(&mut self, name: &str, new_name: String) -> Result<()> {
+    fn name(&mut self, name: &str, new_name: &str) -> Result<()> {
         let index = self
             .lists
             .iter()
             .position(|list| list.name == name)
             .ok_or(anyhow!("List not found"))?;
 
-        self.lists[index].name = new_name;
+        self.lists[index].name = new_name.to_string();
 
         Ok(())
     }
@@ -163,11 +163,11 @@ impl Lists {
 }
 
 impl Menu for List {
-    fn mk(&mut self, name: String) -> Result<()> {
+    fn mk(&mut self, name: &str) -> Result<()> {
         if self.items.iter().any(|item| item.name == name) {
             return Err(anyhow!("Duplicate name"));
         } else {
-            self.items.push(ListItem::new(name))
+            self.items.push(ListItem::new(name.to_string()))
         }
 
         Ok(())
@@ -185,14 +185,14 @@ impl Menu for List {
         Ok(())
     }
 
-    fn name(&mut self, name: &str, new_name: String) -> Result<()> {
+    fn name(&mut self, name: &str, new_name: &str) -> Result<()> {
         let index = self
             .items
             .iter()
             .position(|item| item.name == name)
             .ok_or(anyhow!("List not found"))?;
 
-        self.items[index].name = new_name;
+        self.items[index].name = new_name.to_string();
 
         Ok(())
     }
