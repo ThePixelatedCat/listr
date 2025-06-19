@@ -3,17 +3,17 @@ use std::io;
 use crate::lists::{List, Lists, Menu};
 use anyhow::{Context, Result, anyhow};
 
-const SUPER_HELP: &str = "\nrm [NAME]: delete the specified list
+const SUPER_HELP: &str = "\nrm [NAME]: delete the specified list. will prompt for confirmation
                           \nmk [NAME]: make a new list with the specified name
-                          \nname [NAME] [NEW_NAME]: set the name of the specified list
+                          \nname [NAME]: set the name of the specified list. will prompt for new name input
                           \nopen [NAME]: open the specified list
                           \nhelp: view this list of commands
                           \nexit: save your changes and quit the application";
-const SUB_HELP: &str = "\nrm [NAME]: delete the specified item
+const SUB_HELP: &str = "\nrm [NAME]: delete the specified item. will prompt for confirmation
                         \nmk [NAME]: make a new item with the specified name
-                        \nname [NAME] [NEW_NAME]: set the name of the specified item
+                        \nname [NAME]: set the name of the specified item. will prompt for new name input
                         \nopen [NAME]: view the description of the specified item
-                        \ndesc [NAME]: edit the description of the specified item
+                        \ndesc [NAME]: set the description of the specified item. will prompt for new description
                         \nhelp: view this list of commands
                         \nexit: return to lists menu";
 
